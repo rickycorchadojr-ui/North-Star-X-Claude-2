@@ -1418,7 +1418,7 @@ function scrollToCurrent(){
     const cur=document.getElementById("currentTile");
     if(!cur)return;
 
-    let offset=170;
+    let offset=190;
 
     switch(currentRender.mode){
       case "days":
@@ -1430,7 +1430,7 @@ function scrollToCurrent(){
       case "years":
       case "yearMonths":
       case "monthWeeks":
-        offset=170;   // tighter alignment
+        offset=180;   // tighter alignment
         break;
     }
 
