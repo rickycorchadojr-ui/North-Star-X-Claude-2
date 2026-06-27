@@ -1,0 +1,2376 @@
+<!-- NORTH STAR v1.2.0 -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>North Star</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="North Star">
+  <meta name="theme-color" content="#050505">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ── TOKENS ────────────────────────────────────────────────── */
+:root{
+  --bg:        #050505;
+  --surface:   #0d0f12;
+  --surface2:  #111418;
+  --surface3:  #181c22;
+  --border:    rgba(255,255,255,.18);
+  --border-hi: rgba(255,255,255,.55);
+  --text:      #e8e8e8;
+  --text-dim:  rgba(232,232,232,.5);
+  --text-faint:rgba(232,232,232,.28);
+  /* Primary blue — warm kindergarten-primary, not neon */
+  --accent:    #4488ff;
+  --accent-glow: rgba(68,136,255,.35);
+  --c-health:  #b89521;
+  --c-life:    #6eb6d9;
+  --c-work:    #2a5fbf;
+  --c-sleep:   #555;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Space Grotesk', system-ui, sans-serif;
+  --radius: 4px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  width:100vw;height:100vh;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:13px;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── LAYOUT ────────────────────────────────────────────────── */
+.app{
+  height:100vh;
+  padding:16px 20px 16px;
+  display:grid;
+  grid-template-rows:auto auto 1fr;
+  gap:10px;
+}
+
+/* ── TOPBAR ────────────────────────────────────────────────── */
+.topbar{
+  display:grid;
+  grid-template-columns:1fr 440px 1fr;
+  align-items:start;
+  gap:12px;
+}
+
+.brand{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:2px;
+  text-transform:lowercase;
+  color:var(--text-dim);
+  margin-bottom:6px;
+}
+.brand span{color:var(--accent);letter-spacing:0}
+
+#viewLabel{
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-top:2px;
+}
+
+/* ── METER ─────────────────────────────────────────────────── */
+.meter{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+}
+
+#meterLabel{
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:500;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--text-dim);
+}
+
+#meterGrid{
+  display:grid;
+  gap:2px;
+  justify-content:center;
+  max-width:440px;
+}
+
+.meter-square{
+  width:7px;
+  height:7px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.05);
+  transition:background .15s,border-color .15s;
+}
+.meter-square.filled{
+  background:rgba(255,255,255,.32);
+  border-color:rgba(255,255,255,.32);
+}
+.meter-square.current{
+  background:var(--accent);
+  border-color:var(--accent);
+  animation:meterPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes meterPulse{
+  0%,100%{box-shadow:0 0 0 0 var(--accent-glow)}
+  50%{box-shadow:0 0 0 3px rgba(68,136,255,0)}
+}
+
+#meterSub{
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:400;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+}
+
+/* ── META ──────────────────────────────────────────────────── */
+.meta{
+  text-align:right;
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:400;
+  line-height:1.6;
+  color:var(--text-dim);
+}
+
+/* ── NAV ───────────────────────────────────────────────────── */
+.nav-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  border-bottom:1px solid var(--border);
+  padding-bottom:10px;
+}
+
+.nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+.view-title{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  margin-left:auto;
+  white-space:nowrap;
+}
+
+/* ── BUTTONS ───────────────────────────────────────────────── */
+button{
+  font-family:var(--sans);
+  background:var(--surface);
+  color:var(--text);
+  border:1px solid var(--border);
+  padding:5px 11px;
+  border-radius:var(--radius);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:background .12s, border-color .12s, color .12s, transform .08s;
+}
+button:hover{
+  background:var(--surface3);
+  border-color:rgba(255,255,255,.38);
+}
+button:active{transform:translateY(1px)}
+
+/* ── UTILITY DOCK ──────────────────────────────────────────── */
+.utility-dock{
+  position:fixed;
+  left:20px;
+  bottom:20px;
+  z-index:180;
+  display:flex;
+  gap:6px;
+}
+
+.icon-button{
+  width:32px;height:32px;
+  padding:0;
+  border-radius:50%;
+  font-size:15px;
+  letter-spacing:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:.5;
+  transition:opacity .15s;
+}
+.icon-button:hover{opacity:.9}
+
+/* ── WEEKDAY HEADER ────────────────────────────────────────── */
+.weekday-header{
+  display:none;
+  grid-template-columns:repeat(7,1fr);
+  background:var(--bg);
+  border-left:1px solid var(--border-hi);
+  border-right:1px solid var(--border-hi);
+}
+.weekday-header.active{display:grid}
+.weekday-cell{
+  padding:4px 7px;
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:500;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  border-right:1px solid var(--border);
+}
+
+/* ── GRID ──────────────────────────────────────────────────── */
+.grid-wrap{
+  flex:1;
+  overflow:auto;
+  background:var(--bg);
+  scroll-behavior:auto;
+}
+.grid{
+  display:grid;
+  align-content:start;
+  min-height:100%;
+  border-top:1px solid var(--border-hi);
+  border-left:1px solid var(--border-hi);
+}
+
+/* ── TILE ──────────────────────────────────────────────────── */
+.tile{
+  position:relative;
+  aspect-ratio:1/1;
+  border-right:1px solid var(--border-hi);
+  border-bottom:1px solid var(--border-hi);
+  background:var(--surface2);
+  padding:6px 7px;
+  overflow:visible;
+  cursor:pointer;
+  /* PHOTO: these three lines are load-bearing — do not alter */
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  transition:background-color .12s, outline-color .12s, transform .1s;
+  will-change:transform;
+}
+.tile:hover{
+  background-color:var(--surface3);
+  z-index:3;
+}
+.tile:nth-child(even){background-color:#0f1215}
+.tile:nth-child(even):hover{background-color:var(--surface3)}
+
+/* When tile has an image, keep background-image but allow hover color to overlay faintly */
+.tile.has-image{background-color:transparent}
+.tile.has-image:hover{background-color:rgba(24,28,34,.4)}
+
+.tile.has-image .tile-text{
+  text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.8);
+}
+
+.tile.current{
+  outline:2px solid var(--accent);
+  outline-offset:-2px;
+  background-color:var(--surface3);
+  z-index:4;
+}
+.tile.future{opacity:.32}
+.tile.past{opacity:.78}
+
+/* Corner tick marks */
+.tile::before,.tile::after{
+  content:"";
+  position:absolute;
+  background:var(--border-hi);
+  z-index:50;
+  pointer-events:none;
+}
+.tile::before{width:8px;height:1px;right:-4px;bottom:-1px}
+.tile::after{width:1px;height:8px;right:-1px;bottom:-4px}
+.tile.current::before,.tile.current::after{background:var(--accent)}
+
+/* ── TILE TEXT ─────────────────────────────────────────────── */
+.tile-text{
+  position:relative;
+  z-index:70;
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:500;
+  line-height:1.35;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+  color:var(--text);   /* uniform color — sep is only slightly faint */
+}
+
+/* dim the /// separators just a touch so numbers read first */
+.tile-text .sep{color:var(--text-faint)}
+
+/* ── TILE METRICS ──────────────────────────────────────────── */
+.tile-metrics{
+  position:absolute;
+  right:5px;
+  bottom:5px;
+  z-index:75;
+  display:flex;
+  align-items:flex-end;
+  gap:2px;
+}
+
+.metric-grid{
+  display:grid;
+  grid-template-columns:repeat(2,16px);
+  grid-template-rows:repeat(2,16px);
+  gap:2px;
+}
+
+.metric-square{
+  width:16px;height:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:var(--mono);
+  font-size:7px;
+  font-weight:500;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.2);
+  text-shadow:0 1px 2px #000;
+}
+
+.metric-sleep{background:var(--c-sleep)}
+.metric-health{background:var(--c-health)}
+.metric-life{background:var(--c-life)}
+.metric-work{background:var(--c-work)}
+.state-square{background:#101318;border-color:rgba(255,255,255,.22)}
+
+/* ── HABIT X ───────────────────────────────────────────────── */
+.habit-x{
+  position:absolute;
+  left:6px;
+  bottom:4px;
+  z-index:90;
+  color:#ff3b3b;
+  font-size:14px;
+  font-weight:700;
+  line-height:1;
+  font-family:var(--mono);
+  text-shadow:0 1px 2px #000,0 0 6px #000;
+}
+
+/* ── PANEL ─────────────────────────────────────────────────── */
+.panel{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  width:370px;
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
+  background:#08090c;
+  border:1px solid rgba(255,255,255,.38);
+  padding:14px;
+  z-index:200;
+  display:none;
+  box-shadow:0 24px 72px rgba(0,0,0,.75),0 0 0 1px rgba(0,0,0,.5);
+  transform:translateY(8px);
+  opacity:0;
+  transition:opacity .18s ease, transform .18s ease;
+}
+.panel.active{
+  display:block;
+  animation:panelIn .18s ease forwards;
+}
+@keyframes panelIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.panel-section{display:none}
+.panel-section.active{display:block}
+
+/* ── PANEL TABS — now 4 columns ─────────────────────────────── */
+.panel-tabs{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:4px;
+  margin-bottom:12px;
+}
+.panel-tab{
+  padding:5px 3px;
+  font-size:8px;
+  letter-spacing:.7px;
+  border-radius:var(--radius);
+}
+.panel-tab.active{
+  background:var(--text);
+  color:var(--bg);
+  border-color:var(--text);
+}
+
+/* ── PANEL TITLE / META ─────────────────────────────────────── */
+.panel-title{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  margin-bottom:4px;
+  color:var(--text);
+}
+.panel-meta{
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:400;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  line-height:1.6;
+  margin-bottom:12px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+
+/* ── FORM ELEMENTS ─────────────────────────────────────────── */
+textarea,input,select{
+  width:100%;
+  background:var(--surface);
+  color:var(--text);
+  border:1px solid var(--border);
+  padding:8px 10px;
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:400;
+  outline:none;
+  border-radius:var(--radius);
+  transition:border-color .12s;
+  -webkit-appearance:none;
+}
+textarea{height:90px;resize:none}
+textarea:focus,input:focus,select:focus{
+  border-color:rgba(255,255,255,.5);
+}
+
+.field-label{
+  font-family:var(--sans);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-top:12px;
+  margin-bottom:5px;
+}
+
+/* ── SLEEP / STATE ROWS ─────────────────────────────────────── */
+.sleep-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.state-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+
+/* ── PHOTO ──────────────────────────────────────────────────── */
+.photo-name{
+  margin-top:6px;
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  word-break:break-all;
+}
+
+/* ── ACTIVITIES ─────────────────────────────────────────────── */
+.activity-row{display:grid;grid-template-columns:1.4fr .7fr .9fr;gap:6px}
+.block-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.block-row-full{display:grid;grid-template-columns:1fr;gap:6px;margin-top:6px}
+
+.block-item{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:center;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:3px solid var(--border);
+  padding:8px;
+  border-radius:var(--radius);
+  transition:border-color .12s;
+}
+.block-item.cat-work{border-left-color:var(--c-work)}
+.block-item.cat-health{border-left-color:var(--c-health)}
+.block-item.cat-life{border-left-color:var(--c-life)}
+
+.block-time{
+  font-family:var(--mono);
+  font-size:8px;
+  font-weight:400;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-bottom:2px;
+}
+.block-name{
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+}
+.block-meta{
+  font-family:var(--mono);
+  font-size:8px;
+  font-weight:400;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  margin-top:2px;
+}
+
+.activity-list{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+
+.activity-item{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:8px;
+  align-items:center;
+  background:var(--surface);
+  border:1px solid var(--border);
+  padding:6px 8px;
+  border-radius:var(--radius);
+  cursor:pointer;
+  transition:border-color .12s, background .12s;
+}
+.activity-item:hover{
+  background:var(--surface3);
+  border-color:rgba(255,255,255,.28);
+}
+
+.activity-name{
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+}
+.activity-meta{
+  font-family:var(--mono);
+  font-size:8px;
+  font-weight:400;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  white-space:nowrap;
+}
+.activity-delete{
+  padding:3px 7px;
+  font-size:9px;
+  border-radius:3px;
+  flex-shrink:0;
+}
+
+/* ── PROTOCOL SECTION LABEL ─────────────────────────────────── */
+.protocol-section-label{
+  font-family:var(--sans);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-top:10px;
+  margin-bottom:4px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.protocol-section-label::after{
+  content:'';
+  flex:1;
+  height:1px;
+  background:var(--border);
+}
+
+.protocol-label-dot{
+  width:6px;height:6px;
+  border-radius:50%;
+  display:inline-block;
+  flex-shrink:0;
+}
+
+/* ── HABIT BOX ──────────────────────────────────────────────── */
+.habit-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  padding:10px;
+  margin-top:10px;
+  border-radius:var(--radius);
+}
+.habit-form{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+
+/* ── TOTALS ─────────────────────────────────────────────────── */
+.totals-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.total-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  padding:7px 8px;
+  border-radius:var(--radius);
+}
+.total-label{
+  font-family:var(--sans);
+  font-size:8px;
+  font-weight:700;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+}
+.total-value{
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  margin-top:2px;
+  color:var(--text);
+}
+
+/* ── PANEL ACTIONS ──────────────────────────────────────────── */
+.panel-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+
+/* ─────────────────────────────────────────────────────────────
+   WEEK TIMELINE — Google Calendar-style non-overlapping columns
+   ────────────────────────────────────────────────────────────── */
+.week-timeline{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  min-height:1440px;           /* 1px per minute */
+  border-top:1px solid var(--border-hi);
+  border-left:1px solid var(--border-hi);
+}
+.day-column{
+  position:relative;
+  min-height:1440px;
+  background:var(--surface2);
+  border-right:1px solid var(--border-hi);
+  border-bottom:1px solid var(--border-hi);
+  padding:0;
+}
+.day-column.current{
+  outline:2px solid var(--accent);
+  outline-offset:-2px;
+  background:var(--surface3);
+}
+.day-column-label{
+  position:sticky;
+  top:0;
+  z-index:20;
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:500;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  background:rgba(5,5,5,.92);
+  padding:5px 6px;
+  line-height:1.5;
+  border-bottom:1px solid var(--border);
+}
+
+/* Hour grid lines — subtle horizontal rules every 60px (60 min) */
+.day-column-body{
+  position:relative;
+  height:1440px;
+}
+.hour-line{
+  position:absolute;
+  left:0;right:0;
+  height:1px;
+  background:rgba(255,255,255,.06);
+  pointer-events:none;
+  z-index:1;
+}
+.hour-label{
+  position:absolute;
+  left:3px;
+  font-family:var(--mono);
+  font-size:6px;
+  font-weight:400;
+  color:var(--text-faint);
+  pointer-events:none;
+  z-index:2;
+  line-height:1;
+  transform:translateY(-50%);
+}
+
+/*
+  Each .timeline-block is absolutely positioned.
+  left/right/width are set by JS to implement column-packing
+  so overlapping blocks sit side-by-side instead of on top.
+*/
+.timeline-block{
+  position:absolute;
+  min-height:6px;
+  padding:2px 4px;
+  overflow:hidden;
+  font-family:var(--mono);
+  font-size:7px;
+  font-weight:500;
+  line-height:1.2;
+  text-transform:uppercase;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.22);
+  text-shadow:0 1px 2px #000;
+  border-radius:2px;
+  z-index:10;
+  box-sizing:border-box;
+}
+.timeline-health{background:var(--c-health)}
+.timeline-life{background:var(--c-life)}
+.timeline-work{background:var(--c-work)}
+.timeline-sleep{background:var(--c-sleep)}
+
+/* ── REFLECT TAB ─────────────────────────────────────────────── */
+.reflect-section{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.reflect-block{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:10px 12px;
+}
+
+.reflect-heading{
+  font-family:var(--sans);
+  font-size:8px;
+  font-weight:700;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin-bottom:8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.reflect-heading::before{
+  content:'';
+  width:5px;height:5px;
+  border-radius:50%;
+  background:var(--accent);
+  flex-shrink:0;
+}
+
+.reflect-summary{
+  font-family:var(--sans);
+  font-size:11px;
+  font-weight:400;
+  line-height:1.65;
+  color:var(--text);
+  letter-spacing:.1px;
+}
+
+.reflect-obs-list{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.reflect-obs{
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:400;
+  letter-spacing:.4px;
+  color:var(--text-dim);
+  line-height:1.5;
+  padding-left:10px;
+  position:relative;
+}
+.reflect-obs::before{
+  content:'—';
+  position:absolute;
+  left:0;
+  color:var(--text-faint);
+}
+
+.reflect-obs.highlight{
+  color:var(--text);
+}
+.reflect-obs.positive::before{content:'↑';color:#4dbe8a}
+.reflect-obs.negative::before{content:'↓';color:#e05a5a}
+.reflect-obs.neutral::before{content:'·';color:var(--text-faint)}
+.reflect-obs.streak::before{content:'★';color:var(--accent)}
+
+.reflect-empty{
+  font-family:var(--mono);
+  font-size:9px;
+  color:var(--text-faint);
+  text-align:center;
+  padding:14px 0;
+  letter-spacing:.5px;
+}
+
+.reflect-day-score{
+  display:flex;
+  align-items:baseline;
+  gap:6px;
+  margin-bottom:8px;
+}
+.reflect-score-num{
+  font-family:var(--mono);
+  font-size:22px;
+  font-weight:500;
+  color:var(--text);
+  letter-spacing:-1px;
+}
+.reflect-score-delta{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:.5px;
+}
+.reflect-score-delta.up{color:#4dbe8a}
+.reflect-score-delta.down{color:#e05a5a}
+.reflect-score-delta.flat{color:var(--text-faint)}
+
+/* ── SCROLLBAR ──────────────────────────────────────────────── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.35)}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <div class="brand">north <span>★</span> star</div>
+      <div id="viewLabel"></div>
+    </div>
+    <div class="meter">
+      <div id="meterLabel"></div>
+      <div id="meterGrid"></div>
+      <div id="meterSub"></div>
+    </div>
+    <div class="meta" id="lifeMeta"></div>
+  </div>
+
+  <div class="nav-row">
+    <div class="nav">
+      <button onclick="showRoot('days')">Days</button>
+      <button onclick="showRoot('weeks')">Weeks</button>
+      <button onclick="showRoot('months')">Months</button>
+      <button onclick="showRoot('years')">Years</button>
+      <button onclick="goBack()">Back</button>
+    </div>
+    <div class="view-title" id="currentView"></div>
+  </div>
+
+  <div class="utility-dock">
+    <button class="icon-button" onclick="exportSave()" title="Export Save">💾</button>
+    <button class="icon-button" onclick="importSave()" title="Import Save">📂</button>
+    <input id="saveImporter" type="file" accept=".json,application/json" style="display:none">
+  </div>
+
+  <div id="weekdayHeader" class="weekday-header">
+    <div class="weekday-cell">SU</div>
+    <div class="weekday-cell">MO</div>
+    <div class="weekday-cell">TU</div>
+    <div class="weekday-cell">WE</div>
+    <div class="weekday-cell">TH</div>
+    <div class="weekday-cell">FR</div>
+    <div class="weekday-cell">SA</div>
+  </div>
+  <div class="grid-wrap" id="gridWrap"><div id="grid" class="grid"></div></div>
+</div>
+
+<!-- PANEL -->
+<div class="panel" id="dayPanel">
+  <div class="panel-title" id="panelTitle"></div>
+  <div class="panel-meta" id="panelMeta"></div>
+
+  <!-- 4-tab layout: State / Acts / Photo / Reflect -->
+  <div class="panel-tabs">
+    <button class="panel-tab active" id="tabState"      onclick="showPanelSection('state')">State</button>
+    <button class="panel-tab"        id="tabActivities" onclick="showPanelSection('activities')">Acts</button>
+    <button class="panel-tab"        id="tabPhoto"      onclick="showPanelSection('photo')">Photo</button>
+    <button class="panel-tab"        id="tabReflect"    onclick="showPanelSection('reflect')">Reflect</button>
+  </div>
+
+  <!-- PHOTO -->
+  <div class="panel-section" id="sectionPhoto">
+    <div class="field-label">Photo</div>
+    <input id="photoPicker" type="file" accept="image/*" style="display:none">
+    <button onclick="choosePhoto()">Choose Photo</button>
+    <div class="photo-name" id="photoName">No photo selected</div>
+    <div class="panel-actions">
+      <button onclick="uploadPhoto()">Upload Photo</button>
+      <button onclick="clearImageUrl()">Clear Image</button>
+    </div>
+  </div>
+
+  <!-- STATE -->
+  <div class="panel-section active" id="sectionState">
+    <div class="field-label">Sleep</div>
+    <div class="sleep-row">
+      <input id="sleepHours"   type="number" min="0" max="24"  placeholder="HRS">
+      <input id="sleepMinutes" type="number" min="0" max="59"  placeholder="MIN">
+      <input id="sleepScore"   type="number" min="0" max="10" step="0.1" placeholder="SCORE" readonly>
+    </div>
+
+    <div class="field-label">State</div>
+    <div class="state-row">
+      <input id="readinessScore"  type="number" min="1" max="10" step="0.1" placeholder="READINESS">
+      <input id="motivationScore" type="number" min="1" max="10" step="0.1" placeholder="MOTIVATION">
+    </div>
+
+    <div class="field-label">Day Note</div>
+    <textarea id="dayNote" placeholder="Day note..."></textarea>
+  </div>
+
+  <!-- ACTIVITIES -->
+  <div class="panel-section" id="sectionActivities">
+    <div class="field-label">Activities</div>
+    <div class="activity-list" id="protocolList"></div>
+
+    <div class="habit-box">
+      <div class="field-label" style="margin-top:0">Winning Habit of the Month</div>
+      <div id="monthlyHabitStatus" class="activity-meta">No monthly habit set</div>
+      <div class="habit-form">
+        <input  id="habitName"      type="text" placeholder="HABIT NAME">
+        <select id="habitPillar">
+          <option value="health">HEALTH</option>
+          <option value="life">LIFE</option>
+          <option value="work">WORK</option>
+        </select>
+        <select id="habitCapacity">
+          <option value="Discipline">DISCIPLINE</option>
+          <option value="Preparation">PREPARATION</option>
+          <option value="Faith">FAITH</option>
+          <option value="Fitness">FITNESS</option>
+          <option value="Mindfulness">MINDFULNESS</option>
+          <option value="Happiness">HAPPINESS</option>
+          <option value="Review">REVIEW</option>
+          <option value="Insight">INSIGHT</option>
+          <option value="Dream Projects">DREAM PROJECTS</option>
+          <option value="Trading Skill">TRADING SKILL</option>
+          <option value="Projects">PROJECTS</option>
+        </select>
+        <input  id="habitMinutes"   type="number" min="1" max="1440" placeholder="WIN MIN">
+        <select id="habitFrequency">
+          <option value="daily">DAILY</option>
+          <option value="weekdays">WEEKDAYS</option>
+          <option value="weekends">WEEKENDS</option>
+          <option value="sun">SUNDAY</option>
+          <option value="mon">MONDAY</option>
+          <option value="tue">TUESDAY</option>
+          <option value="wed">WEDNESDAY</option>
+          <option value="thu">THURSDAY</option>
+          <option value="fri">FRIDAY</option>
+          <option value="sat">SATURDAY</option>
+        </select>
+        <button onclick="saveMonthlyHabit()">Set Habit</button>
+      </div>
+    </div>
+
+    <div class="field-label">Time Block</div>
+    <div class="block-row">
+      <input id="blockStart" type="time">
+      <input id="blockEnd"   type="time">
+    </div>
+    <div class="block-row-full">
+      <input id="blockName" type="text" placeholder="BLOCK NAME">
+      <select id="blockCategory">
+        <option value="work">WORK</option>
+        <option value="life">LIFE</option>
+        <option value="health">HEALTH</option>
+        <option value="sleep">SLEEP</option>
+      </select>
+      <select id="blockCapacity">
+        <option value="Discipline">DISCIPLINE</option>
+        <option value="Preparation">PREPARATION</option>
+        <option value="Faith">FAITH</option>
+        <option value="Fitness">FITNESS</option>
+        <option value="Mindfulness">MINDFULNESS</option>
+        <option value="Happiness">HAPPINESS</option>
+        <option value="Review">REVIEW</option>
+        <option value="Insight">INSIGHT</option>
+        <option value="Dream Projects">DREAM PROJECTS</option>
+        <option value="Trading Skill">TRADING SKILL</option>
+        <option value="Projects">PROJECTS</option>
+        <option value="Service">SERVICE</option>
+        <option value="Hygiene">HYGIENE</option>
+        <option value="Hydration">HYDRATION</option>
+        <option value="Flexibility">FLEXIBILITY</option>
+        <option value="Future Opportunity">FUTURE OPPORTUNITY</option>
+        <option value="Manifesting">MANIFESTING</option>
+      </select>
+    </div>
+    <div class="panel-actions">
+      <button onclick="addBlock()">Add Block</button>
+    </div>
+
+    <div class="activity-list" id="activityList"></div>
+
+    <div class="field-label">Totals</div>
+    <div class="totals-grid" id="totalsGrid"></div>
+  </div>
+
+  <!-- REFLECT -->
+  <div class="panel-section" id="sectionReflect">
+    <div id="reflectContent"></div>
+  </div>
+
+  <div class="panel-actions">
+    <button onclick="closePanel(true)">Close</button>
+  </div>
+</div>
+
+<script>
+const APP_VERSION="1.2.0";
+const BIRTH=new Date(1987,5,26);
+const HORIZON_YEARS=110;
+const END=new Date(2097,5,26);
+const MS_DAY=86400000;
+const DAY_MINUTES=1440;
+const MONTHS=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+const WORKER_URL="https://withered-glade-1589.rickycorchadojr.workers.dev";
+const UPLOAD_KEY_STORAGE="northStarUploadKey";
+const MONTHLY_HABIT_STORAGE="northStarMonthlyHabit";
+const FREQ_DAYS={sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
+
+const PILLAR_PROTOCOLS={
+  sleep:[
+    {name:"Wake Early",minutes:1,capacity:"Discipline"},
+    {name:"Go to Bed Early",minutes:1,capacity:"Preparation"}
+  ],
+  health:[
+    {name:"Read Bible",minutes:5,capacity:"Faith"},
+    {name:"Read Tao Te Ching",minutes:5,capacity:"Faith"},
+    {name:"Shower",minutes:10,capacity:"Hygiene"},
+    {name:"The Ritual",minutes:30,capacity:"Fitness"},
+    {name:"Stretch",minutes:10,capacity:"Flexibility"},
+    {name:"Read How To Read a Book",minutes:5,capacity:"Intelligence"},
+    {name:"Meditation",minutes:5,capacity:"Mindfulness"},
+    {name:"Drink Water",minutes:3,capacity:"Hydration"}
+  ],
+  life:[
+    {name:"Make Bed",minutes:5,capacity:"Discipline"},
+    {name:"Bullet Journal",minutes:5,capacity:"Preparation"},
+    {name:"Examen",minutes:10,capacity:"Review"},
+    {name:"Reset Alarms",minutes:1,capacity:"Preparation"},
+    {name:"Read Walden",minutes:10,capacity:"Mindfulness"},
+    {name:"Find Some Joy",minutes:5,capacity:"Happiness"},
+    {name:"Gratitude / Small Wins",minutes:5,capacity:"Happiness"},
+    {name:"Clean",minutes:30,capacity:"Service"}
+  ],
+  work:[
+    {name:"Deepwork",minutes:30,capacity:"Dream Projects"},
+    {name:"Pre-market Prep",minutes:10,capacity:"Preparation"},
+    {name:"5 Min Gratitude & Forgiveness",minutes:10,capacity:"Preparation"},
+    {name:"Positive Priming",minutes:5,capacity:"Preparation"},
+    {name:"Record Session",minutes:1,capacity:"Preparation"},
+    {name:"Trade",minutes:5,capacity:"Trading Skill"},
+    {name:"Import Trades",minutes:5,capacity:"Review"},
+    {name:"Upload Recording",minutes:5,capacity:"Review"},
+    {name:"5 Contract Habit Tracker",minutes:5,capacity:"Review"},
+    {name:"Journal Trades",minutes:5,capacity:"Insight"},
+    {name:"Journal",minutes:5,capacity:"Insight"},
+    {name:"Drills",minutes:10,capacity:"Trading Skill"},
+    {name:"Read Psycho-Cybernetics",minutes:15,capacity:"Insight"},
+    {name:"Animation Exercise",minutes:10,capacity:"Dream Projects"},
+    {name:"Drawing Exercise",minutes:20,capacity:"Dream Projects"},
+    {name:"Work on Apps",minutes:20,capacity:"Projects"},
+    {name:"Work on Animation",minutes:20,capacity:"Dream Projects"},
+    {name:"1% Better at Trading",minutes:5,capacity:"Insight"},
+    {name:"Work on Pocketbook",minutes:5,capacity:"Projects"},
+    {name:"Japanese",minutes:5,capacity:"Future Opportunity"},
+    {name:"369 Manifestation",minutes:5,capacity:"Manifesting"}
+  ]
+};
+
+const PILLAR_COLOR={health:"var(--c-health)",life:"var(--c-life)",work:"var(--c-work)"};
+const PILLAR_DOT={health:"#b89521",life:"#6eb6d9",work:"#2a5fbf"};
+
+let historyStack=[];
+let currentRender={mode:"days",data:null};
+let selectedDay=null;
+let selectedFile=null;
+
+/* ── DATE HELPERS ──────────────────────────────────────────── */
+function sod(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+function dayNum(d){return Math.floor((sod(d)-sod(BIRTH))/MS_DAY)+1}
+function ageYears(d=new Date()){return (d-BIRTH)/(MS_DAY*365.2425)}
+function yearNum(y){return y-BIRTH.getFullYear()}
+function monthNum(y,m){return (y-BIRTH.getFullYear())*12+m+1}
+function lifeWeekNum(d){return Math.floor((sod(d)-sod(BIRTH))/(MS_DAY*7))+1}
+function calendarWeekStart(d){const x=sod(d);x.setDate(x.getDate()-x.getDay());return x}
+function calendarWeekIndex(d){return Math.floor((calendarWeekStart(d)-calendarWeekStart(BIRTH))/(MS_DAY*7))+1}
+function totalWeeks(){return calendarWeekIndex(addDays(END,-1))}
+function clampDate(d){if(d<BIRTH)return new Date(BIRTH);if(d>=END)return new Date(END);return d}
+function formatMonthDay(d){return `${MONTHS[d.getMonth()]} ${d.getDate()}`}
+function formatWeekRange(start){
+  const end=addDays(start,6);
+  return start.getMonth()===end.getMonth()
+    ?`${MONTHS[start.getMonth()]} ${start.getDate()}—${end.getDate()}`
+    :`${MONTHS[start.getMonth()]} ${start.getDate()}—${MONTHS[end.getMonth()]} ${end.getDate()}`;
+}
+function dayOfYear(d){const start=new Date(d.getFullYear(),0,1);return Math.floor((sod(d)-sod(start))/MS_DAY)+1}
+function daysInYear(y){return new Date(y,1,29).getMonth()===1?366:365}
+function calendarWeekOfYear(d){return Math.floor((calendarWeekStart(d)-calendarWeekStart(new Date(d.getFullYear(),0,1)))/(MS_DAY*7))+1}
+function weeksInCurrentYear(){return calendarWeekOfYear(new Date(new Date().getFullYear(),11,31))}
+function daysLeftInYear(){const now=sod(new Date());const last=new Date(now.getFullYear(),11,31);return Math.floor((sod(last)-now)/MS_DAY)}
+function dayKey(d){return `ns_day_${dayNum(d)}`}
+function getImageUrl(d){return localStorage.getItem(dayKey(d)+"_image")||""}
+function activitiesKey(d){return dayKey(d)+"_activities"}
+function blocksKey(d){return dayKey(d)+"_blocks"}
+function timeToMinutes(time){
+  if(!time)return null;
+  const parts=time.split(":");
+  if(parts.length!==2)return null;
+  const h=parseInt(parts[0],10);const m=parseInt(parts[1],10);
+  if(Number.isNaN(h)||Number.isNaN(m))return null;
+  return (h*60)+m;
+}
+function blockDuration(start,end){
+  const s=timeToMinutes(start);const e=timeToMinutes(end);
+  if(s===null||e===null)return 0;
+  if(e>s)return e-s;
+  return (DAY_MINUTES-s)+e;
+}
+function formatBlockTime(start,end){return `${start}–${end}`}
+function monthKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}
+
+/* ── MONTHLY HABIT ──────────────────────────────────────────── */
+function getMonthlyHabit(){
+  try{return JSON.parse(localStorage.getItem(MONTHLY_HABIT_STORAGE)||"null")}
+  catch(e){return null}
+}
+function habitAppliesToDate(habit,d){
+  if(!habit)return false;
+  if(habit.monthKey!==monthKey(d))return false;
+  const day=d.getDay();
+  if(habit.frequency==="daily")return true;
+  if(habit.frequency==="weekdays")return day>=1&&day<=5;
+  if(habit.frequency==="weekends")return day===0||day===6;
+  return FREQ_DAYS[habit.frequency]===day;
+}
+function getHabitMinutesForDate(habit,d){
+  if(!habit)return 0;
+  return getActivitiesForDate(d)
+    .filter(a=>a.category===habit.pillar&&a.name.toLowerCase()===habit.name.toLowerCase())
+    .reduce((sum,a)=>sum+(parseInt(a.minutes,10)||0),0);
+}
+function habitCompleteForDate(d){
+  const habit=getMonthlyHabit();
+  if(!habitAppliesToDate(habit,d))return true;
+  return getHabitMinutesForDate(habit,d)>=habit.minutes;
+}
+function protocolListForCategory(category,d=null){
+  const protocol=[...(PILLAR_PROTOCOLS[category]||[])];
+  const habit=getMonthlyHabit();
+  if(habit&&habit.pillar===category&&d&&habitAppliesToDate(habit,d)){
+    const index=protocol.findIndex(item=>item.name.toLowerCase()===habit.name.toLowerCase());
+    const monthlyItem={name:habit.name,minutes:habit.minutes,capacity:habit.capacity};
+    if(index>=0){protocol[index]=monthlyItem}else{protocol.push(monthlyItem)}
+  }
+  return protocol;
+}
+function monthlyHabitProgress(){
+  const habit=getMonthlyHabit();
+  if(!habit)return null;
+  const now=sod(new Date());
+  const first=new Date(now.getFullYear(),now.getMonth(),1);
+  const last=new Date(now.getFullYear(),now.getMonth()+1,0);
+  let required=0,complete=0;let d=first;
+  while(d<=last){
+    if(habitAppliesToDate(habit,d)){required++;if(habitCompleteForDate(d))complete++;}
+    d=addDays(d,1);
+  }
+  return{required,complete,percent:required?Math.round((complete/required)*100):0};
+}
+function renderMonthlyHabitStatus(){
+  const habit=getMonthlyHabit();
+  if(!habit){monthlyHabitStatus.innerText="No monthly habit set";return}
+  habitName.value=habit.name||"";
+  habitPillar.value=habit.pillar||"health";
+  habitCapacity.value=habit.capacity||"Discipline";
+  habitMinutes.value=habit.minutes||"";
+  habitFrequency.value=habit.frequency||"daily";
+  const logged=selectedDay?getHabitMinutesForDate(habit,selectedDay):0;
+  const applies=selectedDay&&habitAppliesToDate(habit,selectedDay);
+  const progress=monthlyHabitProgress();
+  monthlyHabitStatus.innerText=
+    `${habit.name.toUpperCase()} / ${habit.pillar.toUpperCase()} / ${habit.capacity.toUpperCase()} / ${habit.minutes}m / ${habit.frequency.toUpperCase()}`
+    +`\nToday: ${applies?`${logged}/${habit.minutes}m`:"not scheduled"}`
+    +`\nMonth: ${progress.complete}/${progress.required} days (${progress.percent}%)`;
+}
+function saveMonthlyHabit(){
+  const name=habitName.value.trim();
+  const minutes=parseInt(habitMinutes.value,10);
+  if(!name){alert("Enter habit name");return}
+  if(!minutes||minutes<1){alert("Enter win minutes");return}
+  const habit={name,pillar:habitPillar.value,capacity:habitCapacity.value,minutes,frequency:habitFrequency.value,monthKey:monthKey(new Date()),createdAt:new Date().toISOString()};
+  localStorage.setItem(MONTHLY_HABIT_STORAGE,JSON.stringify(habit));
+  renderActivityList();renderTotals();renderMonthlyHabitStatus();
+  render(currentRender.mode,currentRender.data,false);
+}
+
+/* ── IMAGES ─────────────────────────────────────────────────── */
+function findFirstImageInRange(start,end){
+  let d=sod(start);const last=sod(end);
+  while(d<=last&&d<END){const img=getImageUrl(d);if(img)return img;d=addDays(d,1);}
+  return "";
+}
+function getWeekImage(start){return findFirstImageInRange(start,addDays(start,6))}
+function getMonthImage(y,m){return findFirstImageInRange(new Date(y,m,1),new Date(y,m+1,0))}
+function getYearImage(y){return findFirstImageInRange(new Date(y,0,1),new Date(y,11,31))}
+function imageFileNameFromUrl(url){if(!url)return "";return url.split("/img/")[1]||""}
+function uniqueImageFileName(d,file){
+  let ext="jpg";
+  if(file.type&&file.type.includes("png"))ext="png";
+  if(file.type&&file.type.includes("webp"))ext="webp";
+  return dayNum(d)+"-"+Date.now()+"."+ext;
+}
+async function getUploadKey(forcePrompt=false){
+  let uploadKey=localStorage.getItem(UPLOAD_KEY_STORAGE);
+  if(forcePrompt||!uploadKey){const entered=prompt("UPLOAD KEY");if(!entered)return "";localStorage.setItem(UPLOAD_KEY_STORAGE,entered);uploadKey=entered;}
+  return uploadKey;
+}
+async function attemptPhotoUpload(fileName,file,forcePrompt=false){
+  const uploadKey=await getUploadKey(forcePrompt);
+  if(!uploadKey)return{ok:false,status:0};
+  const response=await fetch(WORKER_URL+"/upload/"+fileName,{method:"POST",headers:{"x-upload-key":uploadKey,"content-type":file.type||"image/jpeg"},body:file});
+  if(response.status===401)return{ok:false,status:401};
+  if(!response.ok)return{ok:false,status:response.status};
+  const data=await response.json();
+  return{ok:true,status:response.status,url:data.url};
+}
+async function attemptDeleteFile(fileName,forcePrompt=false){
+  const uploadKey=await getUploadKey(forcePrompt);
+  if(!uploadKey)return{ok:false,status:0};
+  const response=await fetch(WORKER_URL+"/delete/"+fileName,{method:"DELETE",headers:{"x-upload-key":uploadKey}});
+  if(response.status===401)return{ok:false,status:401};
+  if(!response.ok)return{ok:false,status:response.status};
+  return{ok:true,status:response.status};
+}
+async function deleteR2ImageByUrl(url){
+  const fileName=imageFileNameFromUrl(url);
+  if(!fileName)return true;
+  let result=await attemptDeleteFile(fileName,false);
+  if(result.status===401){localStorage.removeItem(UPLOAD_KEY_STORAGE);result=await attemptDeleteFile(fileName,true);}
+  return result.ok;
+}
+
+/* ── LIFE META ──────────────────────────────────────────────── */
+function meta(){
+  const now=new Date();
+  const days=dayNum(now);
+  const total=Math.floor(365.2425*HORIZON_YEARS);
+  lifeMeta.innerHTML=
+    `D <span style="color:var(--text)">/// ${days.toLocaleString()}</span><br>`+
+    `Age <span style="color:var(--text)">${ageYears(now).toFixed(2)}</span><br>`+
+    `<span style="color:var(--text)">${((days/total)*100).toFixed(2)}%</span> to 110<br>`+
+    `<span style="opacity:.35">v${APP_VERSION}</span>`;
+}
+
+function updateMeter(mode){
+  const now=new Date();
+  let total=111,current=yearNum(now.getFullYear())+1,label=`Current year — ${yearNum(now.getFullYear())}`,sub="";
+  if(mode==="months"||mode==="yearMonths"||mode==="monthWeeks"){total=12;current=now.getMonth()+1;label=`Current month — ${monthNum(now.getFullYear(),now.getMonth())}`;sub=`Month ${current} of 12`}
+  if(mode==="weeks"||mode==="weekDays"){total=weeksInCurrentYear();current=calendarWeekOfYear(now);label=`Current week — ${calendarWeekIndex(now)}`;sub=`Week ${current} of ${total}`}
+  if(mode==="days"){total=daysInYear(now.getFullYear());current=dayOfYear(now);label=`Current day — ${dayNum(now)}`;sub=`${daysLeftInYear()} days remaining`}
+  if(mode==="years"){sub=`Year ${yearNum(now.getFullYear())} of 110`}
+  meterLabel.innerText=label;
+  meterSub.innerText=sub;
+  meterGrid.innerHTML="";
+  let cols=total;
+  if(total>60)cols=37;
+  if(total<=12)cols=total;
+  if(total>12&&total<=60)cols=26;
+  meterGrid.style.gridTemplateColumns=`repeat(${cols},7px)`;
+  for(let i=1;i<=total;i++){
+    const sq=document.createElement("div");
+    sq.className="meter-square";
+    if(i<current)sq.classList.add("filled");
+    if(i===current)sq.classList.add("current");
+    meterGrid.appendChild(sq);
+  }
+}
+
+function setState(label,title,cols){
+  viewLabel.innerText=label;
+  currentView.innerText=title;
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  grid.innerHTML="";
+  gridWrap.scrollTop=0;
+  weekdayHeader.classList.toggle("active",cols===7);
+  updateMeter(currentRender.mode);
+}
+
+function clsForDate(d,img="",forceCurrent=false){
+  const now=sod(new Date());
+  let cls=forceCurrent||(+sod(d)===+now)?"current":d<now?"past":"future";
+  if(img)cls+=" has-image";
+  return cls;
+}
+
+function tileLines(lines){
+  return lines.filter(Boolean).map(line=>
+    line.replace(/\/\/\//g,`<span class="sep">///</span>`)
+  ).join("<br>");
+}
+
+function tile(lines,cls,onClick,id,image="",metricDate=null){
+  const t=document.createElement("div");
+  t.className="tile "+(cls||"");
+  if(id)t.id=id;
+  if(image)t.style.backgroundImage=`url("${image}")`;
+  const today=sod(new Date());
+  const habitX=metricDate&&sod(metricDate)<=today&&!habitCompleteForDate(metricDate)
+    ?`<div class="habit-x">✕</div>`:"";
+  t.innerHTML=`
+    <div class="tile-text">${tileLines(lines)}</div>
+    ${habitX}
+    ${metricDate?tileMetricsHtml(metricDate):""}
+  `;
+  if(onClick)t.onclick=onClick;
+  grid.appendChild(t);
+}
+
+function scrollToCurrent(){
+  setTimeout(()=>{
+    const cur=document.getElementById("currentTile");
+    if(cur)gridWrap.scrollTop=Math.max(0,cur.offsetTop-190);
+  },60);
+}
+
+function showRoot(mode){historyStack=[];render(mode,null,false)}
+
+function render(mode,data=null,push=true){
+  closePanel();
+  if(push)historyStack.push({...currentRender});
+  currentRender={mode,data};
+  if(mode==="years")renderYears();
+  if(mode==="months")renderMonths();
+  if(mode==="weeks")renderWeeks();
+  if(mode==="days")renderDays();
+  if(mode==="yearMonths")renderYearMonths(data.year);
+  if(mode==="monthWeeks")renderMonthWeeks(data.year,data.month);
+  if(mode==="weekDays")renderWeekDays(data.start);
+}
+
+function renderYears(){
+  setState("Lifetime Grid","1987 — 2097",5);
+  const nowY=new Date().getFullYear();
+  for(let y=1987;y<=2097;y++){
+    const img=getYearImage(y);
+    const cls=(y===nowY?"current":y<nowY?"past":"future")+(img?" has-image":"");
+    tile([`${y}`,`Y /// ${yearNum(y)}`],cls,()=>render("yearMonths",{year:y}),y===nowY?"currentTile":null,img);
+  }
+  scrollToCurrent();
+}
+
+function renderYearMonths(y){
+  setState("Year Grid",`${y} / Y /// ${yearNum(y)}`,4);
+  const now=new Date();
+  for(let m=0;m<12;m++){
+    const d=new Date(y,m,1);
+    const img=getMonthImage(y,m);
+    const isCurrent=y===now.getFullYear()&&m===now.getMonth();
+    tile([`${MONTHS[m]}`,`M /// ${monthNum(y,m)}`],clsForDate(d,img,isCurrent),()=>render("monthWeeks",{year:y,month:m}),isCurrent?"currentTile":null,img);
+  }
+  scrollToCurrent();
+}
+
+function renderMonths(){
+  setState("Month Grid","M /// 1 — M /// 1320",4);
+  const now=new Date();
+  for(let y=1987;y<=2097;y++){
+    for(let m=0;m<12;m++){
+      const d=new Date(y,m,1);
+      if(d>=END)break;
+      const img=getMonthImage(y,m);
+      const isCurrent=y===now.getFullYear()&&m===now.getMonth();
+      tile([`${MONTHS[m]}`,`M /// ${monthNum(y,m)}`],clsForDate(d,img,isCurrent),()=>render("monthWeeks",{year:y,month:m}),isCurrent?"currentTile":null,img);
+    }
+  }
+  scrollToCurrent();
+}
+
+function renderMonthWeeks(y,m){
+  setState("Month Grid",`${MONTHS[m]} ${y}`,4);
+  const now=sod(new Date());
+  const first=new Date(y,m,1);
+  const last=new Date(y,m+1,0);
+  let start=calendarWeekStart(first);
+  while(start<=last){
+    const weekStart=new Date(start);
+    const img=getWeekImage(weekStart);
+    const isCurrent=now>=weekStart&&now<=addDays(weekStart,6);
+    tile([formatWeekRange(weekStart),`W /// ${calendarWeekIndex(weekStart)}`],clsForDate(weekStart,img,isCurrent),()=>render("weekDays",{start:weekStart}),isCurrent?"currentTile":null,img);
+    start=addDays(start,7);
+  }
+  scrollToCurrent();
+}
+
+function renderWeeks(){
+  setState("Week Grid",`W /// 1 — W /// ${totalWeeks()}`,4);
+  const now=sod(new Date());
+  let start=calendarWeekStart(BIRTH);
+  while(start<END){
+    const weekStart=new Date(start);
+    const img=getWeekImage(weekStart);
+    const isCurrent=now>=weekStart&&now<=addDays(weekStart,6);
+    tile([formatWeekRange(weekStart),`W /// ${calendarWeekIndex(weekStart)}`],clsForDate(weekStart,img,isCurrent),()=>render("weekDays",{start:weekStart}),isCurrent?"currentTile":null,img);
+    start=addDays(start,7);
+  }
+  scrollToCurrent();
+}
+
+/* ─────────────────────────────────────────────────────────────
+   WEEK TIMELINE — non-overlapping column layout (Google-Calendar style)
+   ─────────────────────────────────────────────────────────────
+   Algorithm:
+   For each day, sort blocks by start time.
+   Use a "columns" array where each entry is the end-minute of the
+   last block placed in that column. Find the leftmost column where
+   the block fits, or add a new column.
+   Then assign left%/width% based on column index / total columns.
+   ───────────────────────────────────────────────────────────── */
+function layoutBlocksInColumns(blocks){
+  // blocks: [{startMin, endMin, ...block}]
+  // returns blocks with added .col and .totalCols properties
+  if(!blocks.length)return [];
+  const sorted=[...blocks].sort((a,b)=>a.startMin-b.startMin);
+  const columns=[];  // columns[i] = endMin of last placed block
+
+  sorted.forEach(block=>{
+    let placed=false;
+    for(let i=0;i<columns.length;i++){
+      if(columns[i]<=block.startMin){
+        block.col=i;
+        columns[i]=block.endMin;
+        placed=true;
+        break;
+      }
+    }
+    if(!placed){
+      block.col=columns.length;
+      columns.push(block.endMin);
+    }
+    block._totalCols=columns.length; // will be updated below
+  });
+
+  // second pass: update totalCols now that we know the max
+  const maxCols=columns.length;
+  sorted.forEach(b=>b._totalCols=maxCols);
+  return sorted;
+}
+
+function renderWeekDays(start){
+  const weekStart=calendarWeekStart(start);
+  viewLabel.innerText="Week Timeline";
+  currentView.innerText=formatWeekRange(weekStart);
+  weekdayHeader.classList.remove("active");
+  updateMeter("weekDays");
+  grid.innerHTML="";
+  grid.style.gridTemplateColumns="1fr";
+  gridWrap.scrollTop=0;
+
+  const timeline=document.createElement("div");
+  timeline.className="week-timeline";
+
+  for(let i=0;i<7;i++){
+    const d=addDays(weekStart,i);
+    const column=document.createElement("div");
+    column.className="day-column";
+    if(+sod(d)===+sod(new Date()))column.classList.add("current");
+
+    const label=document.createElement("div");
+    label.className="day-column-label";
+    label.innerHTML=`${formatMonthDay(d)}<br><span style="opacity:.4">D ///</span> ${dayNum(d)}`;
+    column.appendChild(label);
+
+    const body=document.createElement("div");
+    body.className="day-column-body";
+
+    // Hour grid lines
+    for(let h=0;h<24;h++){
+      const line=document.createElement("div");
+      line.className="hour-line";
+      line.style.top=`${h*60}px`;
+      body.appendChild(line);
+      if(h>0&&h%3===0){
+        const lbl=document.createElement("div");
+        lbl.className="hour-label";
+        lbl.style.top=`${h*60}px`;
+        lbl.innerText=`${h}:00`;
+        body.appendChild(lbl);
+      }
+    }
+
+    // Lay out blocks
+    const rawBlocks=getBlocksForDate(d);
+    const enriched=rawBlocks.map(block=>{
+      const startMin=timeToMinutes(block.start)||0;
+      const dur=block.minutes||1;
+      const endMin=startMin+dur;
+      return{...block,startMin,endMin};
+    });
+
+    const laid=layoutBlocksInColumns(enriched);
+
+    laid.forEach(block=>{
+      const topPx=block.startMin;   // 1px per minute
+      const heightPx=Math.max(block.endMin-block.startMin,6);
+      const colW=100/block._totalCols;
+      const leftPct=block.col*colW;
+      const el=document.createElement("div");
+      el.className=`timeline-block timeline-${block.category}`;
+      el.style.top=`${topPx}px`;
+      el.style.height=`${heightPx}px`;
+      el.style.left=`${leftPct}%`;
+      el.style.width=`calc(${colW}% - 2px)`;
+      el.title=`${block.start}–${block.end} ${block.name}`;
+      // Only show text if tall enough
+      if(heightPx>=14){
+        el.innerText=heightPx>=24?`${block.start}–${block.end} ${block.name}`:block.name;
+      }
+      body.appendChild(el);
+    });
+
+    column.appendChild(body);
+    timeline.appendChild(column);
+  }
+  grid.appendChild(timeline);
+  // Scroll to ~6 AM so the morning is visible first
+  setTimeout(()=>{gridWrap.scrollTop=360},60);
+}
+
+function renderDays(){
+  setState("Daily Grid","Current Window",7);
+  const today=sod(new Date());
+  const windowStart=addDays(today,-180);
+  const start=calendarWeekStart(windowStart);
+  const end=addDays(calendarWeekStart(addDays(today,365)),7);
+  let d=clampDate(start);
+  while(d<end&&d<END){
+    const cur=new Date(d);
+    const img=getImageUrl(cur);
+    tile([formatMonthDay(cur),`D /// ${dayNum(cur)}`],clsForDate(cur,img),()=>openDay(cur),+sod(cur)===+today?"currentTile":null,img,cur);
+    d=addDays(d,1);
+  }
+  scrollToCurrent();
+}
+
+/* ── PANEL SECTIONS ─────────────────────────────────────────── */
+function showPanelSection(section){
+  ["state","activities","photo","reflect"].forEach(name=>{
+    const sEl=document.getElementById("section"+name.charAt(0).toUpperCase()+name.slice(1));
+    const tEl=document.getElementById("tab"+name.charAt(0).toUpperCase()+name.slice(1));
+    if(sEl)sEl.classList.toggle("active",name===section);
+    if(tEl)tEl.classList.toggle("active",name===section);
+  });
+  if(section==="reflect")renderReflect();
+}
+
+function openDay(d){
+  selectedDay=sod(d);
+  selectedFile=null;
+  photoPicker.value="";
+  photoName.innerText="No photo selected";
+  blockStart.value="";blockEnd.value="";blockName.value="";blockCategory.value="work";blockCapacity.value="Preparation";
+  panelTitle.innerText=`${formatMonthDay(selectedDay)} / D /// ${dayNum(selectedDay)}`;
+  panelMeta.innerHTML=
+    `W <span style="opacity:.5">///</span> ${calendarWeekIndex(selectedDay)}`+
+    `&emsp;LW <span style="opacity:.5">///</span> ${lifeWeekNum(selectedDay)}`+
+    `<br>M <span style="opacity:.5">///</span> ${monthNum(selectedDay.getFullYear(),selectedDay.getMonth())}`+
+    `&emsp;Y <span style="opacity:.5">///</span> ${yearNum(selectedDay.getFullYear())}`;
+  dayNote.value=localStorage.getItem(dayKey(selectedDay)+"_note")||"";
+  sleepHours.value=localStorage.getItem(dayKey(selectedDay)+"_sleep_hours")||"";
+  sleepMinutes.value=localStorage.getItem(dayKey(selectedDay)+"_sleep_minutes")||"";
+  sleepScore.value=sleepScoreFromMinutes(getSleepMinutesForDate(selectedDay));
+  readinessScore.value=localStorage.getItem(dayKey(selectedDay)+"_readiness_score")||"";
+  motivationScore.value=localStorage.getItem(dayKey(selectedDay)+"_motivation_score")||"";
+  renderActivityList();renderTotals();renderMonthlyHabitStatus();
+  showPanelSection("state");
+  dayPanel.classList.add("active");
+}
+
+dayNote.addEventListener("input",()=>{
+  if(selectedDay)localStorage.setItem(dayKey(selectedDay)+"_note",dayNote.value);
+});
+
+function saveSleepMetric(){
+  if(!selectedDay)return;
+  localStorage.setItem(dayKey(selectedDay)+"_sleep_hours",sleepHours.value);
+  localStorage.setItem(dayKey(selectedDay)+"_sleep_minutes",sleepMinutes.value);
+  sleepScore.value=sleepScoreFromMinutes(getSleepMinutes());
+  renderTotals();
+}
+sleepHours.addEventListener("input",saveSleepMetric);
+sleepMinutes.addEventListener("input",saveSleepMetric);
+
+function saveStateMetrics(){
+  if(!selectedDay)return;
+  localStorage.setItem(dayKey(selectedDay)+"_readiness_score",readinessScore.value);
+  localStorage.setItem(dayKey(selectedDay)+"_motivation_score",motivationScore.value);
+  renderTotals();
+}
+readinessScore.addEventListener("input",saveStateMetrics);
+motivationScore.addEventListener("input",saveStateMetrics);
+
+/* ── DATA ACCESSORS ─────────────────────────────────────────── */
+function getActivitiesForDate(d){
+  try{return JSON.parse(localStorage.getItem(activitiesKey(d))||"[]")}
+  catch(e){return []}
+}
+function getSleepMinutesForDate(d){
+  const h=parseInt(localStorage.getItem(dayKey(d)+"_sleep_hours"),10)||0;
+  const m=parseInt(localStorage.getItem(dayKey(d)+"_sleep_minutes"),10)||0;
+  return (h*60)+m;
+}
+function sleepScoreFromMinutes(minutes){
+  if(!minutes)return "";
+  return Math.min((minutes/480)*10,10).toFixed(1);
+}
+function calculateTotalsForDate(d){
+  const totals={sleep:getSleepMinutesForDate(d),health:0,life:0,work:0};
+  getActivitiesForDate(d).forEach(activity=>{
+    const minutes=parseInt(activity.minutes,10)||0;
+    if(activity.category==="health")totals.health+=minutes;
+    if(activity.category==="life")totals.life+=minutes;
+    if(activity.category==="work")totals.work+=minutes;
+  });
+  totals.tracked=totals.sleep+totals.health+totals.life+totals.work;
+  return totals;
+}
+function hasDayMetricData(d){
+  const totals=calculateTotalsForDate(d);
+  return totals.tracked>0;
+}
+function percentOfDay(minutes){
+  if(!minutes)return "-";
+  return String(Math.round((minutes/DAY_MINUTES)*100));
+}
+function getSleepScoreForDate(d){return sleepScoreFromMinutes(getSleepMinutesForDate(d))}
+function getReadinessScoreForDate(d){return localStorage.getItem(dayKey(d)+"_readiness_score")||""}
+function getMotivationScoreForDate(d){return localStorage.getItem(dayKey(d)+"_motivation_score")||""}
+function scoreValue(value){return value?value:"·"}
+
+function protocolScoreForDate(d,category){
+  const protocol=protocolListForCategory(category,d);
+  if(!protocol.length)return 0;
+  const activities=getActivitiesForDate(d);
+  let earned=0;
+  protocol.forEach(required=>{
+    const logged=activities
+      .filter(a=>a.category===category&&a.name.toLowerCase()===required.name.toLowerCase())
+      .reduce((sum,a)=>sum+(parseInt(a.minutes,10)||0),0);
+    earned+=Math.min(logged/required.minutes,1);
+  });
+  return Math.round((earned/protocol.length)*100);
+}
+
+function dayScoreForDate(d){
+  const scores=[
+    parseFloat(getSleepScoreForDate(d)),
+    parseFloat(getReadinessScoreForDate(d)),
+    parseFloat(getMotivationScoreForDate(d)),
+    protocolScoreForDate(d,"health")/10,
+    protocolScoreForDate(d,"life")/10,
+    protocolScoreForDate(d,"work")/10
+  ].filter(s=>!isNaN(s)&&s>=0&&s<=10);
+  if(!scores.length)return null;
+  return parseFloat((scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1));
+}
+
+function tileMetricsHtml(d){
+  if(!hasDayMetricData(d)&&!getSleepScoreForDate(d)&&!getReadinessScoreForDate(d)&&!getMotivationScoreForDate(d))return "";
+  const totals=calculateTotalsForDate(d);
+  const sleep=getSleepScoreForDate(d);
+  const readiness=getReadinessScoreForDate(d);
+  const motivation=getMotivationScoreForDate(d);
+  return `
+    <div class="tile-metrics">
+      <div class="metric-grid">
+        <div class="metric-square state-square">${scoreValue(dayScoreForDate(d))}</div>
+        <div class="metric-square state-square">${scoreValue(sleep)}</div>
+        <div class="metric-square state-square">${scoreValue(readiness)}</div>
+        <div class="metric-square state-square">${scoreValue(motivation)}</div>
+      </div>
+      <div class="metric-grid">
+        <div class="metric-square metric-sleep">${percentOfDay(totals.sleep)}</div>
+        <div class="metric-square metric-health">${percentOfDay(totals.health)}</div>
+        <div class="metric-square metric-life">${percentOfDay(totals.life)}</div>
+        <div class="metric-square metric-work">${percentOfDay(totals.work)}</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ── BLOCKS ─────────────────────────────────────────────────── */
+function getBlocksForDate(d){
+  try{return JSON.parse(localStorage.getItem(blocksKey(d))||"[]")}
+  catch(e){return []}
+}
+function getBlocks(){if(!selectedDay)return [];return getBlocksForDate(selectedDay)}
+function saveBlocks(blocks){if(!selectedDay)return;localStorage.setItem(blocksKey(selectedDay),JSON.stringify(blocks))}
+function getActivities(){
+  if(!selectedDay)return [];
+  try{return JSON.parse(localStorage.getItem(activitiesKey(selectedDay))||"[]")}
+  catch(e){return []}
+}
+function saveActivities(activities){if(!selectedDay)return;localStorage.setItem(activitiesKey(selectedDay),JSON.stringify(activities))}
+function formatActivityCategory(category){
+  if(category==="work")return "Work";
+  if(category==="life")return "Life";
+  if(category==="health")return "Health";
+  if(category==="sleep")return "Sleep";
+  return "Unknown";
+}
+
+function renderProtocolList(){
+  if(!selectedDay)return;
+  protocolList.innerHTML="";
+  ["health","life","work"].forEach(category=>{
+    const dot=PILLAR_DOT[category];
+    const title=document.createElement("div");
+    title.className="protocol-section-label";
+    title.innerHTML=`<span class="protocol-label-dot" style="background:${dot}"></span>${formatActivityCategory(category)} — ${protocolScore(category)}%`;
+    protocolList.appendChild(title);
+    protocolListForCategory(category,selectedDay).forEach(required=>{
+      const logged=getActivities()
+        .filter(a=>a.category===category&&a.name.toLowerCase()===required.name.toLowerCase())
+        .reduce((sum,a)=>sum+(parseInt(a.minutes,10)||0),0);
+      const complete=logged>=required.minutes;
+      const item=document.createElement("div");
+      item.className="activity-item";
+      item.style.cursor="pointer";
+      item.innerHTML=`
+        <div class="activity-name" style="color:${complete?"var(--text)":"rgba(232,232,232,.55)"}">
+          ${complete?"✓":"○"} ${required.name}
+        </div>
+        <div class="activity-meta">${logged}/${required.minutes}m</div>
+        <div class="activity-meta" style="color:${complete?"var(--c-health)":"var(--text-faint)"}">${complete?"Done":"Short"}</div>
+      `;
+      item.onclick=()=>{
+        const startVal=prompt(`${required.name}\n\nStart time?`,"04:00");
+        if(startVal===null)return;
+        const endVal=prompt(`${required.name}\n\nEnd time?`,"");
+        if(endVal===null)return;
+        addProtocolBlock(required.name,category,required.capacity||"Uncategorized",startVal,endVal);
+      };
+      protocolList.appendChild(item);
+    });
+  });
+}
+
+function renderActivityList(){
+  if(!selectedDay)return;
+  const blocks=getBlocks().sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
+  const activities=getActivities();
+  const blockIds=blocks.map(b=>b.id);
+  const manualActivities=activities.filter(a=>!a.blockId&&!blockIds.includes(a.id));
+  activityList.innerHTML="";
+  renderProtocolList();
+  if(!blocks.length&&!manualActivities.length){
+    const empty=document.createElement("div");
+    empty.className="activity-meta";
+    empty.innerText="No time blocks or activities logged yet";
+    activityList.appendChild(empty);
+    return;
+  }
+  if(blocks.length){
+    const blockTitle=document.createElement("div");
+    blockTitle.className="protocol-section-label";
+    blockTitle.innerHTML="<span></span>Time Blocks";
+    activityList.appendChild(blockTitle);
+    blocks.forEach(block=>{
+      const item=document.createElement("div");
+      item.className=`block-item cat-${block.category}`;
+      item.innerHTML=`
+        <div>
+          <div class="block-time">${formatBlockTime(block.start,block.end)}</div>
+          <div class="block-name">${block.name}</div>
+          <div class="block-meta">${formatActivityCategory(block.category)} / ${block.capacity||"Uncategorized"} / ${block.minutes}m</div>
+        </div>
+        <button class="activity-delete" onclick="deleteBlock('${block.id}')">✕</button>
+      `;
+      activityList.appendChild(item);
+    });
+  }
+  if(manualActivities.length){
+    const manualTitle=document.createElement("div");
+    manualTitle.className="protocol-section-label";
+    manualTitle.innerHTML="<span></span>Manual";
+    activityList.appendChild(manualTitle);
+    manualActivities.forEach(activity=>{
+      const item=document.createElement("div");
+      item.className="activity-item";
+      item.innerHTML=`
+        <div class="activity-name">${activity.name}</div>
+        <div class="activity-meta">${formatActivityCategory(activity.category)} / ${activity.minutes}m</div>
+        <button class="activity-delete" onclick="deleteActivity('${activity.id}')">✕</button>
+      `;
+      activityList.appendChild(item);
+    });
+  }
+}
+
+function addProtocolBlock(name,category,capacity,start,end){
+  if(!selectedDay)return;
+  const minutes=blockDuration(start,end);
+  if(!start){alert("Enter start time");return}
+  if(!end){alert("Enter end time");return}
+  if(!minutes||minutes<1){alert("Invalid time block");return}
+  const block={id:String(Date.now())+"-"+Math.random().toString(16).slice(2),name,category,capacity,start,end,minutes};
+  const blocks=getBlocks();blocks.push(block);saveBlocks(blocks);
+  addActivityFromBlock(block);
+  renderActivityList();renderTotals();renderMonthlyHabitStatus();
+}
+
+function addBlock(){
+  if(!selectedDay)return;
+  const start=blockStart.value,end=blockEnd.value,name=blockName.value.trim();
+  const category=blockCategory.value,capacity=blockCapacity.value;
+  const minutes=blockDuration(start,end);
+  if(!start){alert("Enter start time");return}
+  if(!end){alert("Enter end time");return}
+  if(!name){alert("Enter block name");return}
+  if(!minutes||minutes<1){alert("Invalid time block");return}
+  const block={id:String(Date.now())+"-"+Math.random().toString(16).slice(2),name,category,capacity,start,end,minutes};
+  const blocks=getBlocks();blocks.push(block);saveBlocks(blocks);
+  addActivityFromBlock(block);
+  blockStart.value="";blockEnd.value="";blockName.value="";blockCategory.value="work";blockCapacity.value="Preparation";
+  renderActivityList();renderTotals();renderMonthlyHabitStatus();
+}
+
+function addActivityFromBlock(block){
+  const activities=getActivities();
+  const existing=activities.find(a=>a.name.toLowerCase()===block.name.toLowerCase()&&a.category===block.category);
+  if(existing){existing.minutes=(parseInt(existing.minutes,10)||0)+block.minutes}
+  else{activities.push({id:block.id,blockId:block.id,name:block.name,minutes:block.minutes,category:block.category,capacity:block.capacity})}
+  saveActivities(activities);
+}
+
+function deleteBlock(id){
+  if(!selectedDay)return;
+  const blocks=getBlocks();
+  const block=blocks.find(item=>item.id===id);
+  saveBlocks(blocks.filter(item=>item.id!==id));
+  if(block){
+    const activities=getActivities();
+    const matching=activities.find(a=>a.blockId===id||a.id===id);
+    if(matching){saveActivities(activities.filter(a=>a.id!==matching.id))}
+  }
+  renderActivityList();renderTotals();renderMonthlyHabitStatus();
+}
+
+function deleteActivity(id){
+  if(!selectedDay)return;
+  saveActivities(getActivities().filter(a=>a.id!==id));
+  renderActivityList();renderTotals();renderMonthlyHabitStatus();
+}
+
+function getSleepMinutes(){
+  const h=parseInt(sleepHours.value,10)||0;
+  const m=parseInt(sleepMinutes.value,10)||0;
+  return (h*60)+m;
+}
+
+function protocolScore(category){
+  if(!selectedDay)return 0;
+  const protocol=protocolListForCategory(category,selectedDay);
+  if(!protocol.length)return 0;
+  const activities=getActivities();
+  let earned=0;
+  protocol.forEach(required=>{
+    const logged=activities
+      .filter(a=>a.category===category&&a.name.toLowerCase()===required.name.toLowerCase())
+      .reduce((sum,a)=>sum+(parseInt(a.minutes,10)||0),0);
+    earned+=Math.min(logged/required.minutes,1);
+  });
+  return Math.round((earned/protocol.length)*100);
+}
+
+function calculateTotals(){
+  const totals={sleep:getSleepMinutes(),health:0,life:0,work:0};
+  getActivities().forEach(activity=>{
+    const minutes=parseInt(activity.minutes,10)||0;
+    if(activity.category==="health")totals.health+=minutes;
+    if(activity.category==="life")totals.life+=minutes;
+    if(activity.category==="work")totals.work+=minutes;
+  });
+  totals.tracked=totals.sleep+totals.health+totals.life+totals.work;
+  totals.untracked=DAY_MINUTES-totals.tracked;
+  totals.trackedPercent=Math.round((totals.tracked/DAY_MINUTES)*100);
+  return totals;
+}
+
+function formatMinutes(total){
+  const sign=total<0?"-":"";
+  const n=Math.abs(total);
+  const h=Math.floor(n/60),m=n%60;
+  if(h&&m)return `${sign}${h}h ${m}m`;
+  if(h)return `${sign}${h}h`;
+  return `${sign}${m}m`;
+}
+
+function addTotalBox(label,value){
+  const box=document.createElement("div");
+  box.className="total-box";
+  box.innerHTML=`<div class="total-label">${label}</div><div class="total-value">${value}</div>`;
+  totalsGrid.appendChild(box);
+}
+
+function renderTotals(){
+  if(!selectedDay)return;
+  const totals=calculateTotals();
+  totalsGrid.innerHTML="";
+  addTotalBox("Sleep",formatMinutes(totals.sleep));
+  addTotalBox("Health",formatMinutes(totals.health));
+  addTotalBox("Life",formatMinutes(totals.life));
+  addTotalBox("Work",formatMinutes(totals.work));
+  addTotalBox("Health %",`${protocolScore("health")}%`);
+  addTotalBox("Life %",`${protocolScore("life")}%`);
+  addTotalBox("Work %",`${protocolScore("work")}%`);
+  addTotalBox("Tracked",`${totals.trackedPercent}%`);
+  addTotalBox(totals.untracked>=0?"Untracked":"Over",formatMinutes(totals.untracked));
+}
+
+/* ── PHOTO ───────────────────────────────────────────────────── */
+function choosePhoto(){photoPicker.click()}
+photoPicker.addEventListener("change",()=>{
+  selectedFile=photoPicker.files[0];
+  photoName.innerText=selectedFile?selectedFile.name:"No photo selected";
+});
+
+async function uploadPhoto(){
+  if(!selectedDay){alert("No day selected");return}
+  if(!selectedFile){alert("Select a photo first");return}
+  const oldUrl=getImageUrl(selectedDay);
+  const fileName=uniqueImageFileName(selectedDay,selectedFile);
+  let result=await attemptPhotoUpload(fileName,selectedFile,false);
+  if(result.status===401){localStorage.removeItem(UPLOAD_KEY_STORAGE);result=await attemptPhotoUpload(fileName,selectedFile,true)}
+  if(!result.ok){alert("Upload failed");return}
+  localStorage.setItem(dayKey(selectedDay)+"_image",result.url);
+  if(oldUrl&&oldUrl!==result.url){await deleteR2ImageByUrl(oldUrl)}
+  dayPanel.classList.remove("active");
+  render(currentRender.mode,currentRender.data,false);
+}
+
+async function clearImageUrl(){
+  if(!selectedDay)return;
+  const oldUrl=getImageUrl(selectedDay);
+  localStorage.removeItem(dayKey(selectedDay)+"_image");
+  if(oldUrl){const deleted=await deleteR2ImageByUrl(oldUrl);if(!deleted)alert("Image removed locally. Cloud delete failed.")}
+  dayPanel.classList.remove("active");
+  render(currentRender.mode,currentRender.data,false);
+}
+
+function closePanel(refresh=false){
+  dayPanel.classList.remove("active");
+  if(refresh)render(currentRender.mode,currentRender.data,false);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DAILY REFLECT ENGINE
+   Generates rule-based narrative observations comparing
+   the selected day to the previous day and recent streaks.
+   ───────────────────────────────────────────────────────────── */
+
+function delta(current,previous,label,higherIsBetter=true){
+  if(current===null||current===""||previous===null||previous==="")return null;
+  const c=parseFloat(current);const p=parseFloat(previous);
+  if(isNaN(c)||isNaN(p))return null;
+  const diff=c-p;
+  if(Math.abs(diff)<0.05)return{text:`Your ${label} held steady at ${c}.`,dir:"neutral"};
+  const dir=diff>0?"positive":"negative";
+  const effective=(higherIsBetter&&diff>0)||(!higherIsBetter&&diff<0)?"positive":"negative";
+  const verb=diff>0?"rose":"fell";
+  return{text:`Your ${label} ${verb} from ${p} to ${c}.`,dir:effective};
+}
+
+function pillarDelta(d,prev,category){
+  const curr=protocolScoreForDate(d,category);
+  const prevScore=protocolScoreForDate(prev,category);
+  if(curr===0&&prevScore===0)return null;
+  const diff=curr-prevScore;
+  if(Math.abs(diff)<3)return{text:`${capitalize(category)} protocol held at ${curr}%.`,dir:"neutral"};
+  const verb=diff>0?"improved":"declined";
+  const dir=diff>0?"positive":"negative";
+  return{text:`${capitalize(category)} protocol ${verb} from ${prevScore}% to ${curr}%.`,dir};
+}
+
+function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+
+function minutesDelta(d,prev,category){
+  const curr=calculateTotalsForDate(d)[category];
+  const prevM=calculateTotalsForDate(prev)[category];
+  if(!curr&&!prevM)return null;
+  const diff=curr-prevM;
+  if(Math.abs(diff)<5)return null;
+  const verb=diff>0?"increased":"decreased";
+  return{text:`${capitalize(category)} activity minutes ${verb} from ${formatMinutes(prevM)} to ${formatMinutes(curr)}.`,dir:diff>0?"positive":"negative"};
+}
+
+/* Streak: how many consecutive days (going back from d) satisfy predicate */
+function consecutiveStreak(d,predicate,maxLook=14){
+  let streak=0;let cur=addDays(d,-1);
+  for(let i=0;i<maxLook;i++){
+    if(predicate(cur))streak++;
+    else break;
+    cur=addDays(cur,-1);
+  }
+  return streak;
+}
+
+function strongestPillar(d){
+  const scores={health:protocolScoreForDate(d,"health"),life:protocolScoreForDate(d,"life"),work:protocolScoreForDate(d,"work")};
+  return Object.entries(scores).sort((a,b)=>b[1]-a[1])[0];
+}
+function weakestPillar(d){
+  const scores={health:protocolScoreForDate(d,"health"),life:protocolScoreForDate(d,"life"),work:protocolScoreForDate(d,"work")};
+  return Object.entries(scores).sort((a,b)=>a[1]-b[1])[0];
+}
+
+function mostTrackedPillar(d){
+  const t=calculateTotalsForDate(d);
+  const pillars=[["health",t.health],["life",t.life],["work",t.work]];
+  return pillars.sort((a,b)=>b[1]-a[1])[0];
+}
+
+function renderReflect(){
+  if(!selectedDay){reflectContent.innerHTML=`<div class="reflect-empty">Open a day to see its reflection.</div>`;return}
+  const d=selectedDay;
+  const prev=addDays(d,-1);
+
+  const todayScore=dayScoreForDate(d);
+  const yesterScore=dayScoreForDate(prev);
+  const todaySleep=getSleepScoreForDate(d);
+  const yesterSleep=getSleepScoreForDate(prev);
+  const todayReadiness=getReadinessScoreForDate(d);
+  const yesterReadiness=getReadinessScoreForDate(prev);
+  const todayMotivation=getMotivationScoreForDate(d);
+  const yesterMotivation=getMotivationScoreForDate(prev);
+
+  const hasData=todayScore!==null||todaySleep||todayReadiness||todayMotivation||hasDayMetricData(d);
+
+  if(!hasData){
+    reflectContent.innerHTML=`<div class="reflect-block"><div class="reflect-empty">No data logged for this day yet.<br>Add sleep, state, or activities to generate your reflection.</div></div>`;
+    return;
+  }
+
+  /* ── SUMMARY PARAGRAPH ──────────────────────────────────── */
+  let summaryLines=[];
+
+  // Day score lead
+  if(todayScore!==null){
+    if(yesterScore!==null){
+      const diff=todayScore-yesterScore;
+      const changePhrase=Math.abs(diff)<0.1?"remained close to yesterday's":diff>0?"improved from yesterday's":"declined from yesterday's";
+      summaryLines.push(`Your day score ${changePhrase} ${yesterScore!==null&&Math.abs(diff)>=0.1?yesterScore+" to ":""}${todayScore}.`);
+    }else{
+      summaryLines.push(`Your day score came in at ${todayScore}.`);
+    }
+  }
+
+  // Sleep sentence
+  if(todaySleep){
+    if(yesterSleep){
+      const diff=parseFloat(todaySleep)-parseFloat(yesterSleep);
+      if(Math.abs(diff)>=0.2){
+        summaryLines.push(`Sleep ${diff>0?"improved":"declined"} from ${yesterSleep} to ${todaySleep}.`);
+      }else{
+        summaryLines.push(`Sleep remained consistent at ${todaySleep}.`);
+      }
+    }else{
+      summaryLines.push(`Sleep came in at ${todaySleep}.`);
+    }
+  }
+
+  // Readiness + motivation combo
+  if(todayReadiness&&todayMotivation){
+    const r=parseFloat(todayReadiness),m=parseFloat(todayMotivation);
+    if(r>m+1){summaryLines.push(`Readiness exceeded motivation — available energy ran ahead of drive.`)}
+    else if(m>r+1){summaryLines.push(`Motivation outpaced readiness — drive was present even if the body wasn't fully charged.`)}
+    else{summaryLines.push(`Readiness and motivation stayed close, at ${todayReadiness} and ${todayMotivation}.`)}
+  }else if(todayReadiness){
+    summaryLines.push(`Readiness was ${todayReadiness}.`);
+  }else if(todayMotivation){
+    summaryLines.push(`Motivation was ${todayMotivation}.`);
+  }
+
+  // Strongest/weakest pillar
+  const [strongName,strongVal]=strongestPillar(d);
+  const [weakName,weakVal]=weakestPillar(d);
+  if(strongVal>0){
+    if(strongName!==weakName&&weakVal<strongVal){
+      summaryLines.push(`${capitalize(strongName)} was the strongest pillar at ${strongVal}%. ${capitalize(weakName)} had the most room to grow at ${weakVal}%.`);
+    }else{
+      summaryLines.push(`${capitalize(strongName)} led the pillars at ${strongVal}%.`);
+    }
+  }
+
+  /* ── OBSERVATIONS ───────────────────────────────────────── */
+  const observations=[];
+
+  const sleepD=delta(todaySleep,yesterSleep,"sleep score");
+  if(sleepD)observations.push(sleepD);
+
+  const readinessD=delta(todayReadiness,yesterReadiness,"readiness");
+  if(readinessD)observations.push(readinessD);
+
+  const motivationD=delta(todayMotivation,yesterMotivation,"motivation");
+  if(motivationD)observations.push(motivationD);
+
+  // Cross-signal observation: sleep drove readiness?
+  if(sleepD&&readinessD){
+    if(sleepD.dir==="positive"&&readinessD.dir==="positive"){
+      observations.push({text:"Higher sleep aligned with improved readiness.",dir:"neutral"});
+    }else if(sleepD.dir==="positive"&&readinessD.dir==="negative"){
+      observations.push({text:"Sleep improved but readiness did not follow — recovery may still be catching up.",dir:"neutral"});
+    }
+  }
+
+  // Cross-signal: motivation declined despite high readiness?
+  if(readinessD&&motivationD){
+    if(readinessD.dir==="positive"&&motivationD.dir==="negative"){
+      observations.push({text:"Available energy was present but did not convert into drive.",dir:"neutral"});
+    }else if(motivationD.dir==="positive"&&readinessD.dir==="negative"){
+      observations.push({text:"Drive was up despite reduced physical readiness.",dir:"neutral"});
+    }
+  }
+
+  ["health","life","work"].forEach(cat=>{
+    const pd=pillarDelta(d,prev,cat);
+    if(pd)observations.push(pd);
+    const md=minutesDelta(d,prev,cat);
+    if(md)observations.push(md);
+  });
+
+  // Most tracked pillar
+  const [mostName,mostMins]=mostTrackedPillar(d);
+  if(mostMins>0){
+    observations.push({text:`Most tracked time was spent in ${capitalize(mostName)} (${formatMinutes(mostMins)}).`,dir:"neutral"});
+  }
+
+  // Monthly habit
+  const habit=getMonthlyHabit();
+  if(habit&&habitAppliesToDate(habit,d)){
+    const done=habitCompleteForDate(d);
+    observations.push({
+      text:done?`Monthly habit completed — ${habit.name}.`:`Monthly habit not yet completed — ${habit.name}.`,
+      dir:done?"positive":"negative"
+    });
+  }
+
+  /* ── PATTERNS ───────────────────────────────────────────── */
+  const patterns=[];
+
+  // Day score improvement streak
+  if(todayScore!==null){
+    const improvStreak=consecutiveStreak(d,day=>{
+      const curr=dayScoreForDate(day);
+      const p=dayScoreForDate(addDays(day,-1));
+      return curr!==null&&p!==null&&curr>=p;
+    });
+    if(improvStreak>=2){
+      patterns.push({text:`Day score has improved or held for ${improvStreak+1} consecutive days.`,dir:"streak"});
+    }
+  }
+
+  // Sleep consistency
+  if(todaySleep){
+    const sleepHighStreak=consecutiveStreak(d,day=>parseFloat(getSleepScoreForDate(day))>=7.5);
+    if(sleepHighStreak>=2){
+      patterns.push({text:`Sleep has been above 7.5 for ${sleepHighStreak+1} of the last ${sleepHighStreak+1} days.`,dir:"streak"});
+    }
+    const sleepLowStreak=consecutiveStreak(d,day=>{
+      const s=parseFloat(getSleepScoreForDate(day));
+      return !isNaN(s)&&s<6.0;
+    });
+    if(sleepLowStreak>=2){
+      patterns.push({text:`Sleep has been below 6.0 for ${sleepLowStreak+1} consecutive days.`,dir:"negative"});
+    }
+  }
+
+  // Readiness > motivation for consecutive days
+  if(todayReadiness&&todayMotivation){
+    const r=parseFloat(todayReadiness),m=parseFloat(todayMotivation);
+    if(r>m){
+      const rmStreak=consecutiveStreak(d,day=>{
+        const rd=parseFloat(getReadinessScoreForDate(day));
+        const mo=parseFloat(getMotivationScoreForDate(day));
+        return !isNaN(rd)&&!isNaN(mo)&&rd>mo;
+      });
+      if(rmStreak>=1){
+        patterns.push({text:`This is the ${rmStreak+1}${ordinal(rmStreak+1)} consecutive day that readiness has exceeded motivation.`,dir:"neutral"});
+      }
+    }
+  }
+
+  // Pillar score streaks
+  ["health","life","work"].forEach(cat=>{
+    const score=protocolScoreForDate(d,cat);
+    if(score>=80){
+      const streak=consecutiveStreak(d,day=>protocolScoreForDate(day,cat)>=80);
+      if(streak>=2){
+        patterns.push({text:`${capitalize(cat)} protocol has stayed above 80% for ${streak+1} consecutive days.`,dir:"streak"});
+      }
+    }
+    if(score<30){
+      const streak=consecutiveStreak(d,day=>protocolScoreForDate(day,cat)<30);
+      if(streak>=2){
+        patterns.push({text:`${capitalize(cat)} protocol has been below 30% for ${streak+1} consecutive days.`,dir:"negative"});
+      }
+    }
+  });
+
+  // Monthly habit streak
+  if(habit){
+    const habitStreak=consecutiveStreak(d,day=>habitAppliesToDate(habit,day)&&habitCompleteForDate(day));
+    if(habitStreak>=2){
+      patterns.push({text:`Monthly habit streak: ${habitStreak+1} scheduled days completed in a row.`,dir:"streak"});
+    }
+  }
+
+  /* ── RENDER ─────────────────────────────────────────────── */
+  let html=`<div class="reflect-section">`;
+
+  // Score header
+  if(todayScore!==null){
+    const scoreDiff=yesterScore!==null?todayScore-yesterScore:null;
+    const deltaClass=scoreDiff===null?"flat":scoreDiff>0.05?"up":scoreDiff<-0.05?"down":"flat";
+    const deltaText=scoreDiff===null?"":scoreDiff>0.05?`+${scoreDiff.toFixed(1)}`:scoreDiff<-0.05?`${scoreDiff.toFixed(1)}`:"~";
+    html+=`
+      <div class="reflect-block">
+        <div class="reflect-heading">Day Score</div>
+        <div class="reflect-day-score">
+          <span class="reflect-score-num">${todayScore}</span>
+          ${deltaText?`<span class="reflect-score-delta ${deltaClass}">${deltaText} since yesterday</span>`:""}
+        </div>
+      </div>`;
+  }
+
+  // Summary
+  if(summaryLines.length){
+    html+=`<div class="reflect-block">
+      <div class="reflect-heading">Summary</div>
+      <div class="reflect-summary">${summaryLines.join(" ")}</div>
+    </div>`;
+  }
+
+  // Observations
+  if(observations.length){
+    html+=`<div class="reflect-block">
+      <div class="reflect-heading">Observations</div>
+      <div class="reflect-obs-list">`;
+    observations.forEach(obs=>{
+      html+=`<div class="reflect-obs ${obs.dir}">${obs.text}</div>`;
+    });
+    html+=`</div></div>`;
+  }
+
+  // Patterns
+  if(patterns.length){
+    html+=`<div class="reflect-block">
+      <div class="reflect-heading">Patterns</div>
+      <div class="reflect-obs-list">`;
+    patterns.forEach(p=>{
+      html+=`<div class="reflect-obs ${p.dir}">${p.text}</div>`;
+    });
+    html+=`</div></div>`;
+  }
+
+  // Fallback if nothing meaningful
+  if(!summaryLines.length&&!observations.length&&!patterns.length){
+    html+=`<div class="reflect-block"><div class="reflect-empty">Log sleep, state scores, and activities to generate your reflection.</div></div>`;
+  }
+
+  html+=`</div>`;
+  reflectContent.innerHTML=html;
+}
+
+function ordinal(n){
+  const s=["th","st","nd","rd"];
+  const v=n%100;
+  return s[(v-20)%10]||s[v]||s[0];
+}
+
+/* ── SAVE / LOAD ─────────────────────────────────────────────── */
+function northStarStorageSnapshot(){
+  const data={};
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key&&key.startsWith("ns_day_"))data[key]=localStorage.getItem(key);
+    if(key===UPLOAD_KEY_STORAGE||key===MONTHLY_HABIT_STORAGE)data[key]=localStorage.getItem(key);
+  }
+  return data;
+}
+
+function exportSave(){
+  const now=new Date();
+  const save={app:"North Star",version:APP_VERSION,exportedAt:now.toISOString(),localStorage:northStarStorageSnapshot()};
+  const blob=new Blob([JSON.stringify(save,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=`north-star-save-v${APP_VERSION}-${now.toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);a.click();a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importSave(){saveImporter.click()}
+saveImporter.addEventListener("change",()=>{
+  const file=saveImporter.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const save=JSON.parse(reader.result);
+      if(!save||save.app!=="North Star"||!save.localStorage){alert("Invalid North Star save file");return}
+      if(!confirm("Replace current data with this save?")){saveImporter.value="";return}
+      const keysToRemove=[];
+      for(let i=0;i<localStorage.length;i++){
+        const key=localStorage.key(i);
+        if(key&&(key.startsWith("ns_day_")||key===UPLOAD_KEY_STORAGE||key===MONTHLY_HABIT_STORAGE))keysToRemove.push(key);
+      }
+      keysToRemove.forEach(key=>localStorage.removeItem(key));
+      Object.keys(save.localStorage).forEach(key=>{
+        if(key.startsWith("ns_day_")||key===UPLOAD_KEY_STORAGE||key===MONTHLY_HABIT_STORAGE)localStorage.setItem(key,save.localStorage[key]);
+      });
+      alert("Save loaded");
+      render(currentRender.mode,currentRender.data,false);
+    }catch(e){alert("Save import failed")}
+    saveImporter.value="";
+  };
+  reader.readAsText(file);
+});
+
+function goBack(){
+  const last=historyStack.pop();
+  if(!last){render("days",null,false);return}
+  render(last.mode,last.data,false);
+}
+
+meta();
+render("days",null,false);
+</script>
+</body>
+</html>
