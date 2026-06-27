@@ -1,4 +1,4 @@
-<!-- NORTH STAR v1.2.1 -->
+<!-- NORTH STAR v1.2.2 -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -1040,7 +1040,7 @@ textarea:focus,input:focus,select:focus{
 </div>
 
 <script>
-const APP_VERSION="1.2.1";
+const APP_VERSION="1.2.2";
 const BIRTH=new Date(1987,5,26);
 const HORIZON_YEARS=110;
 const END=new Date(2097,5,26);
@@ -1416,7 +1416,25 @@ function tile(lines,cls,onClick,id,image="",metricDate=null){
 function scrollToCurrent(){
   setTimeout(()=>{
     const cur=document.getElementById("currentTile");
-    if(cur)gridWrap.scrollTop=Math.max(0,cur.offsetTop-190);
+    if(!cur)return;
+
+    let offset=180;
+
+    switch(currentRender.mode){
+      case "days":
+        offset=250;   // clears weekday header
+        break;
+
+      case "weeks":
+      case "months":
+      case "years":
+      case "yearMonths":
+      case "monthWeeks":
+        offset=180;   // tighter alignment
+        break;
+    }
+
+    gridWrap.scrollTop=Math.max(0,cur.offsetTop-offset);
   },60);
 }
 
