@@ -1,4 +1,4 @@
-<!-- NORTH STAR v1.2.0 -->
+<!-- NORTH STAR v1.2.1 -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -267,8 +267,7 @@ button:active{transform:translateY(1px)}
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
-  transition:background-color .12s, outline-color .12s, transform .1s;
-  will-change:transform;
+  transition:background-color .12s, outline-color .12s;
 }
 .tile:hover{
   background-color:var(--surface3);
@@ -1036,12 +1035,12 @@ textarea:focus,input:focus,select:focus{
   </div>
 
   <div class="panel-actions">
-    <button onclick="closePanel(true)">Close</button>
+    <button onclick="closePanel(false)">Close</button>
   </div>
 </div>
 
 <script>
-const APP_VERSION="1.2.0";
+const APP_VERSION="1.2.1";
 const BIRTH=new Date(1987,5,26);
 const HORIZON_YEARS=110;
 const END=new Date(2097,5,26);
@@ -1115,7 +1114,19 @@ let selectedFile=null;
 function sod(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
 function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
 function dayNum(d){return Math.floor((sod(d)-sod(BIRTH))/MS_DAY)+1}
-function ageYears(d=new Date()){return (d-BIRTH)/(MS_DAY*365.2425)}
+function ageYears(d=new Date()){
+  const today=sod(d);
+  let years=today.getFullYear()-BIRTH.getFullYear();
+  const birthdayThisYear=new Date(today.getFullYear(),BIRTH.getMonth(),BIRTH.getDate());
+
+  if(today<birthdayThisYear)years--;
+
+  const lastBirthday=new Date(today.getFullYear()-(today<birthdayThisYear?1:0),BIRTH.getMonth(),BIRTH.getDate());
+  const nextBirthday=new Date(lastBirthday.getFullYear()+1,BIRTH.getMonth(),BIRTH.getDate());
+  const progress=(today-lastBirthday)/(nextBirthday-lastBirthday);
+
+  return years+progress;
+}
 function yearNum(y){return y-BIRTH.getFullYear()}
 function monthNum(y,m){return (y-BIRTH.getFullYear())*12+m+1}
 function lifeWeekNum(d){return Math.floor((sod(d)-sod(BIRTH))/(MS_DAY*7))+1}
@@ -1155,6 +1166,49 @@ function blockDuration(start,end){
 }
 function formatBlockTime(start,end){return `${start}–${end}`}
 function monthKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}
+function weekKeyFromDate(d){
+  const w=calendarWeekStart(d);
+  return `${w.getFullYear()}-${String(w.getMonth()+1).padStart(2,"0")}-${String(w.getDate()).padStart(2,"0")}`;
+}
+function yearIndexKey(y){return `ns_index_year_${y}`}
+function monthIndexKey(y,m){return `ns_index_month_${y}-${String(m+1).padStart(2,"0")}`}
+function weekIndexKey(d){return `ns_index_week_${weekKeyFromDate(d)}`}
+
+function readIndex(key){
+  try{return JSON.parse(localStorage.getItem(key)||"{}")}
+  catch(e){return{}}
+}
+
+function writeIndex(key,obj){
+  localStorage.setItem(key,JSON.stringify(obj));
+}
+
+function rebuildIndexForDay(d){
+  const img=localStorage.getItem(dayKey(d)+"_image")||"";
+  const payload={image:img||""};
+
+  writeIndex(monthIndexKey(d.getFullYear(),d.getMonth()),payload);
+  writeIndex(weekIndexKey(d),payload);
+  writeIndex(yearIndexKey(d.getFullYear()),payload);
+}
+
+function rebuildAllIndexes(){
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key&&key.startsWith("ns_index_"))keys.push(key);
+  }
+  keys.forEach(k=>localStorage.removeItem(k));
+
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key||!key.endsWith("_image"))continue;
+    const n=parseInt(key.replace("ns_day_","").replace("_image",""),10);
+    if(!n||isNaN(n))continue;
+    const d=addDays(BIRTH,n-1);
+    rebuildIndexForDay(d);
+  }
+}
 
 /* ── MONTHLY HABIT ──────────────────────────────────────────── */
 function getMonthlyHabit(){
@@ -1237,9 +1291,15 @@ function findFirstImageInRange(start,end){
   while(d<=last&&d<END){const img=getImageUrl(d);if(img)return img;d=addDays(d,1);}
   return "";
 }
-function getWeekImage(start){return findFirstImageInRange(start,addDays(start,6))}
-function getMonthImage(y,m){return findFirstImageInRange(new Date(y,m,1),new Date(y,m+1,0))}
-function getYearImage(y){return findFirstImageInRange(new Date(y,0,1),new Date(y,11,31))}
+function getWeekImage(start){
+  return readIndex(weekIndexKey(start)).image||"";
+}
+function getMonthImage(y,m){
+  return readIndex(monthIndexKey(y,m)).image||"";
+}
+function getYearImage(y){
+  return readIndex(yearIndexKey(y)).image||"";
+}
 function imageFileNameFromUrl(url){if(!url)return "";return url.split("/img/")[1]||""}
 function uniqueImageFileName(d,file){
   let ext="jpg";
@@ -1971,6 +2031,7 @@ async function uploadPhoto(){
   if(result.status===401){localStorage.removeItem(UPLOAD_KEY_STORAGE);result=await attemptPhotoUpload(fileName,selectedFile,true)}
   if(!result.ok){alert("Upload failed");return}
   localStorage.setItem(dayKey(selectedDay)+"_image",result.url);
+  rebuildIndexForDay(selectedDay);
   if(oldUrl&&oldUrl!==result.url){await deleteR2ImageByUrl(oldUrl)}
   dayPanel.classList.remove("active");
   render(currentRender.mode,currentRender.data,false);
@@ -1980,6 +2041,7 @@ async function clearImageUrl(){
   if(!selectedDay)return;
   const oldUrl=getImageUrl(selectedDay);
   localStorage.removeItem(dayKey(selectedDay)+"_image");
+  rebuildAllIndexes();
   if(oldUrl){const deleted=await deleteR2ImageByUrl(oldUrl);if(!deleted)alert("Image removed locally. Cloud delete failed.")}
   dayPanel.classList.remove("active");
   render(currentRender.mode,currentRender.data,false);
@@ -2353,10 +2415,11 @@ saveImporter.addEventListener("change",()=>{
       }
       keysToRemove.forEach(key=>localStorage.removeItem(key));
       Object.keys(save.localStorage).forEach(key=>{
-        if(key.startsWith("ns_day_")||key===UPLOAD_KEY_STORAGE||key===MONTHLY_HABIT_STORAGE)localStorage.setItem(key,save.localStorage[key]);
-      });
-      alert("Save loaded");
-      render(currentRender.mode,currentRender.data,false);
+  if(key.startsWith("ns_day_")||key===UPLOAD_KEY_STORAGE||key===MONTHLY_HABIT_STORAGE)localStorage.setItem(key,save.localStorage[key]);
+});
+rebuildAllIndexes();
+alert("Save loaded");
+render(currentRender.mode,currentRender.data,false);
     }catch(e){alert("Save import failed")}
     saveImporter.value="";
   };
@@ -2370,6 +2433,7 @@ function goBack(){
 }
 
 meta();
+rebuildAllIndexes();
 render("days",null,false);
 </script>
 </body>
