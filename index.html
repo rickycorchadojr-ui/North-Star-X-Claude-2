@@ -1,4 +1,4 @@
-<!-- NORTH STAR v1.2.2 -->
+<!-- NORTH STAR v1.2.3 -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -1040,7 +1040,7 @@ textarea:focus,input:focus,select:focus{
 </div>
 
 <script>
-const APP_VERSION="1.2.2";
+const APP_VERSION="1.2.3";
 const BIRTH=new Date(1987,5,26);
 const HORIZON_YEARS=110;
 const END=new Date(2097,5,26);
@@ -1421,7 +1421,7 @@ function scrollToCurrent(){
     let offset=190;
 
     if(currentRender.mode==="days"){
-      offset=250;
+      offset=240;
     }
 
     if(
@@ -1431,7 +1431,7 @@ function scrollToCurrent(){
       currentRender.mode==="yearMonths" ||
       currentRender.mode==="monthWeeks"
     ){
-      offset=150;
+      offset=140;
     }
 
     gridWrap.scrollTop=Math.max(0,cur.offsetTop-offset);
