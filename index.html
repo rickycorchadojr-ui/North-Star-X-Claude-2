@@ -1421,7 +1421,7 @@ function scrollToCurrent(){
     let offset=190;
 
     if(currentRender.mode==="days"){
-      offset=228;
+      offset=226;
     }
 
     if(
@@ -1431,7 +1431,7 @@ function scrollToCurrent(){
       currentRender.mode==="yearMonths" ||
       currentRender.mode==="monthWeeks"
     ){
-      offset=138;
+      offset=136;
     }
 
     gridWrap.scrollTop=Math.max(0,cur.offsetTop-offset);
