@@ -1420,18 +1420,18 @@ function scrollToCurrent(){
 
     let offset=190;
 
-    switch(currentRender.mode){
-      case "days":
-        offset=250;   // clears weekday header
-        break;
+    if(currentRender.mode==="days"){
+      offset=250;
+    }
 
-      case "weeks":
-      case "months":
-      case "years":
-      case "yearMonths":
-      case "monthWeeks":
-        offset=180;   // tighter alignment
-        break;
+    if(
+      currentRender.mode==="weeks" ||
+      currentRender.mode==="months" ||
+      currentRender.mode==="years" ||
+      currentRender.mode==="yearMonths" ||
+      currentRender.mode==="monthWeeks"
+    ){
+      offset=150;
     }
 
     gridWrap.scrollTop=Math.max(0,cur.offsetTop-offset);
